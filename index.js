@@ -85,13 +85,14 @@ app.use('/api/groups', groupRoutes);
 // }
 
 // Use writable directory for uploads
-const uploadsDir = path.join('/tmp', 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir);
+if (!fs.existsSync('/tmp/uploads')) {
+  fs.mkdirSync('/tmp/uploads', { recursive: true });
 }
 
 // Serve static files
-app.use('/uploads', express.static(uploadsDir));
+// app.use('/uploads', express.static(uploadsDir));
+app.use('/uploads', express.static('/tmp/uploads'));
+
 
 app.use('/api/profile', profileRoutes);
 
