@@ -21,7 +21,7 @@ const app = express();
 
 
 // CORS configuration
-const allowedOrigins = ['http://localhost:5173', 'http://your-frontend-domain.com']; // Add your frontend URL here
+const allowedOrigins = ['http://localhost:5173', 'https://fypms-front-end.vercel.app']; // Add your frontend URL here
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
