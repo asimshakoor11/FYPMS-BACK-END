@@ -67,7 +67,13 @@ app.use('/posts', postRoutes);
 app.use('/api/groups', groupRoutes);
 
 // Ensure the 'uploads' directory exists
-const uploadsDir = path.join(__dirname, 'uploads');
+// const uploadsDir = path.join(__dirname, 'uploads');
+// if (!fs.existsSync(uploadsDir)) {
+//   fs.mkdirSync(uploadsDir);
+// }
+
+// Use writable directory for uploads
+const uploadsDir = path.join('/tmp', 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
 }
