@@ -37,6 +37,11 @@ app.use(cors({
 
 app.use(bodyParser.json());
 
+// Default route for testing
+app.get('/hello', (req, res) => {
+  res.send('Hello World');
+});
+
 app.use('/api/authCommittee', authCommitteeRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/supervisors', supervisorRoutes);
