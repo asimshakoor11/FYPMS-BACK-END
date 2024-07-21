@@ -5,13 +5,11 @@ const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const path = require('path');
 const fs = require('fs');
-// const mongoose = require('./src/config/db.config');
 const authCommitteeRoutes = require('./src/routes/authCommitteeRoutes');
 const studentRoutes = require('./src/routes/studentRoutes');
 const supervisorRoutes = require('./src/routes/supervisorRoutes');
 const profileRoutes = require('./src/routes/profileRoutes');
 const postRoutes = require('./src/routes/posts');
-
 const groupRoutes = require('./src/routes/groupRoutes');
 
 
@@ -20,28 +18,47 @@ dotenv.config();
 const app = express();
 
 
+app.use((req,res,next)=>{
+  res.setHeader("Access-Control-Allow-Origin","https://fypms-front-end.vercel.app");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  next();
+})
+
+app.use(cors(
+  {
+    origin: ["https://fypms-front-end.vercel.app"],
+    methods: ["POST", "GET", "PUT", "DELETE"],
+    credentials: true
+  }
+))
+
+
 // CORS configuration
-const allowedOrigins = ['https://fypms-front-end.vercel.app', 'http://localhost:3000']; // Add your frontend URL here
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified origin.';
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
-  credentials: true
-}));
+// const allowedOrigins = ['https://fypms-front-end.vercel.app', 'http://localhost:3000']; // Add your frontend URL here
+// app.use(cors({
+//   origin: function (origin, callback) {
+//     // Allow requests with no origin (like mobile apps or curl requests)
+//     if (!origin) return callback(null, true);
+//     if (allowedOrigins.indexOf(origin) === -1) {
+//       const msg = 'The CORS policy for this site does not allow access from the specified origin.';
+//       return callback(new Error(msg), false);
+//     }
+//     return callback(null, true);
+//   },
+//   credentials: true
+// }));
 
 
 app.use(bodyParser.json());
 
 // Default route for testing
-app.get('/hello', (req, res) => {
-  res.send('Hello World');
-});
+app.get('/', (req, res) => {
+  res.send('Hello World!')
+})
 
 app.use('/api/authCommittee', authCommitteeRoutes);
 app.use('/api/students', studentRoutes);
