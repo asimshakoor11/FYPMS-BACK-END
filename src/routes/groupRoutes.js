@@ -184,7 +184,7 @@ router.put('/:id/phase', async (req, res) => {
 router.post('/:groupId/tasks', upload.single('file'), async (req, res) => {
   try {
     const { groupId } = req.params;
-    const { title, description } = req.body;
+    const { title, description, deadline  } = req.body;
     const file = req.file;
 
     const task = {
@@ -192,6 +192,7 @@ router.post('/:groupId/tasks', upload.single('file'), async (req, res) => {
       description,
       filePath: file ? `/uploads/${file.filename}` : null,
       timestamp: new Date(),
+      deadline: new Date(deadline),
     };
 
     const group = await Group.findOneAndUpdate(
@@ -228,12 +229,13 @@ router.post('/:groupId/tasks/submit', upload.single('file'),  async (req, res) =
      timestamp: new Date().toISOString(),
    };
 
-
-    group.submissions.push(submission);
+   group.submissions.push(submission);
     await group.save();
 
     res.status(201).json(group);
   } catch (err) {
+
+    console.error('Error in /tasks/submit route:', err.message);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
