@@ -7,19 +7,52 @@ const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
-
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 // Set up multer for file uploads
-const storage = multer.diskStorage({
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     // cb(null, 'uploads/');
+//     cb(null, '/tmp/uploads/');
+//   },
+//   filename: (req, file, cb) => {
+//     cb(null, `${Date.now()}-${file.originalname}`);
+//   }
+// });
+
+// const upload = multer({ storage });
+
+
+// Cloudinary configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Cloudinary storage
+const cloudinaryStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'uploads',
+    format: async (req, file) => 'png', // supports promises as well
+    public_id: (req, file) => `${Date.now()}-${file.originalname}`,
+  },
+});
+
+// Local storage
+const localStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // cb(null, 'uploads/');
-    cb(null, '/tmp/uploads/');
+    cb(null, 'uploads/');
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);
   }
 });
 
+// Choose storage based on environment
+const storage = process.env.NODE_ENV === 'production' ? cloudinaryStorage : localStorage;
 const upload = multer({ storage });
 
 // GET all groups
@@ -184,14 +217,15 @@ router.put('/:id/phase', async (req, res) => {
 router.post('/:groupId/tasks', upload.single('file'), async (req, res) => {
   try {
     const { groupId } = req.params;
-    const { title, description, deadline  } = req.body;
+    const { title, description, deadline } = req.body;
     const file = req.file;
 
     const task = {
       title,
       description,
       // filePath: file ? `/uploads/${file.filename}` : null,
-      filePath: file ? `/tmp/uploads/${file.filename}` : null,
+      // filePath: file ? `/tmp/uploads/${file.filename}` : null,
+      filePath: file ? (process.env.NODE_ENV === 'production' ? file.path : `/uploads/${file.filename}`) : null,
       timestamp: new Date(),
       deadline: new Date(deadline),
     };
@@ -213,25 +247,25 @@ router.post('/:groupId/tasks', upload.single('file'), async (req, res) => {
 });
 
 //submit tasks
-router.post('/:groupId/tasks/submit', upload.single('file'),  async (req, res) => {
+router.post('/:groupId/tasks/submit', upload.single('file'), async (req, res) => {
   try {
-    const {groupId} = req.params;
+    const { groupId } = req.params;
     const { taskId } = req.body;
     const file = req.file;
 
-    const group = await Group.findOne({ number: groupId }); 
+    const group = await Group.findOne({ number: groupId });
     if (!group) {
       return res.status(404).json({ message: 'Group not found' });
     }
 
-   const submission = {
-     taskId,
-    //  filePath: `/uploads/${file.filename}`,
-     filePath: `/tmp/uploads/${file.filename}`,
-     timestamp: new Date().toISOString(),
-   };
+    const submission = {
+      taskId,
+      //  filePath: `/uploads/${file.filename}`,
+      filePath: `/tmp/uploads/${file.filename}`,
+      timestamp: new Date().toISOString(),
+    };
 
-   group.submissions.push(submission);
+    group.submissions.push(submission);
     await group.save();
 
     res.status(201).json(group);
