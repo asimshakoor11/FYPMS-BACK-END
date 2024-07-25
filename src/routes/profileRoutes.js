@@ -37,7 +37,8 @@ router.get('/:username', async (req, res) => {
 router.post('/:username', upload.single('photo'), async (req, res) => {
   const { file, body } = req;
   if (file) {
-    body.photo = `/uploads/${file.filename}`;
+    // body.photo = `/uploads/${file.filename}`;
+    body.photo = `/tmp/uploads/${file.filename}`;
   }
 
   try {

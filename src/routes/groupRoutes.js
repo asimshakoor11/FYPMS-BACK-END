@@ -190,7 +190,8 @@ router.post('/:groupId/tasks', upload.single('file'), async (req, res) => {
     const task = {
       title,
       description,
-      filePath: file ? `/uploads/${file.filename}` : null,
+      // filePath: file ? `/uploads/${file.filename}` : null,
+      filePath: file ? `/tmp/uploads/${file.filename}` : null,
       timestamp: new Date(),
       deadline: new Date(deadline),
     };
@@ -225,7 +226,8 @@ router.post('/:groupId/tasks/submit', upload.single('file'),  async (req, res) =
 
    const submission = {
      taskId,
-     filePath: `/uploads/${file.filename}`,
+    //  filePath: `/uploads/${file.filename}`,
+     filePath: `/tmp/uploads/${file.filename}`,
      timestamp: new Date().toISOString(),
    };
 
