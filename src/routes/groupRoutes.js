@@ -263,7 +263,7 @@ router.post('/:groupId/tasks/submit', upload.single('file'), async (req, res) =>
     const submission = {
       taskId,
       //  filePath: `/uploads/${file.filename}`,
-      filePath: `/tmp/uploads/${file.filename}`,
+      filePath: process.env.NODE_ENV === 'production' ? file.path : `/uploads/${file.filename}`,
       timestamp: new Date().toISOString(),
     };
 
