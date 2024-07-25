@@ -16,17 +16,28 @@ dotenv.config();
 const app = express();
 
 // CORS configuration
-const corsOptions = {
-  origin: "https://fypms-front-end.vercel.app",
-  // origin: "http://localhost:5173",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
-};
+// const corsOptions = {
+//   origin: "https://fypms-front-end.vercel.app",
+//   // origin: "http://localhost:5173",
+//   methods: ["GET", "POST", "PUT", "DELETE"],
+//   allowedHeaders: ["Content-Type", "Authorization"],
+//   credentials: true
+// };
 
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Enable pre-flight requests for all routes
+// app.use(cors(corsOptions));
+// app.options('*', cors(corsOptions)); // Enable pre-flight requests for all routes
 
+
+
+
+app.use(function (req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+  res.header("Access-Control-Allow-Headers", "x-access-token, Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
+app.use(cors());
 
 // app.use((req,res,next)=>{
 //   res.setHeader("Access-Control-Allow-Origin","https://fypms-front-end.vercel.app");
