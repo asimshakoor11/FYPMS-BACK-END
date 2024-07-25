@@ -89,7 +89,7 @@ if (!fs.existsSync('/tmp/uploads')) {
 
 // Serve static files
 // app.use('/uploads', express.static(uploadsDir));
-app.use('/uploads', express.static('/tmp/uploads'));
+app.use('/tmp/uploads', express.static('/tmp/uploads'));
 
 
 app.use('/api/profile', profileRoutes);
