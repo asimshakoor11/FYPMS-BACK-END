@@ -27,9 +27,6 @@ const app = express();
 // app.use(cors(corsOptions));
 // app.options('*', cors(corsOptions)); // Enable pre-flight requests for all routes
 
-
-
-
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
@@ -88,13 +85,13 @@ app.use('/posts', postRoutes);
 app.use('/api/groups', groupRoutes);
 
 // Ensure the 'uploads' directory exists
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir);
-}
+// const uploadsDir = path.join(__dirname, 'uploads');
+// if (!fs.existsSync(uploadsDir)) {
+//   fs.mkdirSync(uploadsDir);
+// }
 
 // Serve static files
-app.use('/uploads', express.static(uploadsDir));
+// app.use('/uploads', express.static(uploadsDir));
 
 app.use('/api/profile', profileRoutes);
 
