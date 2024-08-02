@@ -78,7 +78,8 @@ router.get('/:number', async (req, res) => {
     const group = await Group.findOne({ number })
       .populate('members', 'name username')
       .populate('supervisor', 'name username')
-      .populate('marks.studentId', 'name username')
+      .populate('marks.studentId', 'name username')      
+      .populate('attendance.attendance.studentId', 'name username');
     if (!group) {
       return res.status(404).json({ message: 'Group not found' });
     }
@@ -155,12 +156,53 @@ router.delete('/:groupId/member/:memberId', async (req, res) => {
 });
 
 // PUT update marks for all members of a group
+// router.put('/:number/marks', async (req, res) => {
+//   const { number } = req.params;
+//   const { marks } = req.body; // marks should be an array of { studentId, marks }
+
+//   if (!Array.isArray(marks)) {
+//     return res.status(400).json({ message: 'Marks should be an array' });
+//   }
+
+//   try {
+//     const group = await Group.findOne({ number });
+
+//     if (!group) {
+//       return res.status(404).json({ message: 'Group not found' });
+//     }
+
+//     // Validate each mark entry
+//     marks.forEach(mark => {
+//       if (!mark.studentId || typeof mark.marks !== 'number') {
+//         throw new Error('Invalid marks data');
+//       }
+//     });
+
+//     // Update marks for each student
+//     group.marks = group.marks.filter(mark => !marks.find(updatedMark => new mongoose.Types.ObjectId(updatedMark.studentId).equals(mark.studentId)));
+//     group.marks.push(...marks.map(mark => ({ studentId: new mongoose.Types.ObjectId(mark.studentId), marks: mark.marks })));
+
+//     const updatedGroup = await group.save();
+//     res.json(updatedGroup);
+//   } catch (error) {
+//     res.status(400).json({ message: error.message });
+//     console.log(error.message);
+//   }
+// });
+
+// PUT update marks for all members of a group
+// PUT update marks for all members of a group
 router.put('/:number/marks', async (req, res) => {
   const { number } = req.params;
-  const { marks } = req.body; // marks should be an array of { studentId, marks }
-
+  const { marks, phase } = req.body; // marks should be an array of { studentId, marks }
+  
   if (!Array.isArray(marks)) {
     return res.status(400).json({ message: 'Marks should be an array' });
+  }
+
+  const validPhases = ['proposalDefense', 'midEvaluation', 'internalEvaluation', 'externalEvaluation'];
+  if (!validPhases.includes(phase)) {
+    return res.status(400).json({ message: 'Invalid phase' });
   }
 
   try {
@@ -170,7 +212,6 @@ router.put('/:number/marks', async (req, res) => {
       return res.status(404).json({ message: 'Group not found' });
     }
 
-    // Validate each mark entry
     marks.forEach(mark => {
       if (!mark.studentId || typeof mark.marks !== 'number') {
         throw new Error('Invalid marks data');
@@ -178,8 +219,22 @@ router.put('/:number/marks', async (req, res) => {
     });
 
     // Update marks for each student
-    group.marks = group.marks.filter(mark => !marks.find(updatedMark => new mongoose.Types.ObjectId(updatedMark.studentId).equals(mark.studentId)));
-    group.marks.push(...marks.map(mark => ({ studentId: new mongoose.Types.ObjectId(mark.studentId), marks: mark.marks })));
+    marks.forEach(mark => {
+      const studentMark = group.marks.find(groupMark => groupMark.studentId.equals(mark.studentId));
+      if (studentMark) {
+        studentMark[phase] = mark.marks;
+      } else {
+        const newMark = {
+          studentId: mark.studentId,
+          proposalDefense: 0,
+          midEvaluation: 0,
+          internalEvaluation: 0,
+          externalEvaluation: 0,
+        };
+        newMark[phase] = mark.marks;
+        group.marks.push(newMark);
+      }
+    });
 
     const updatedGroup = await group.save();
     res.json(updatedGroup);
@@ -188,6 +243,8 @@ router.put('/:number/marks', async (req, res) => {
     console.log(error.message);
   }
 });
+
+
 
 // Update project phase
 router.put('/:id/phase', async (req, res) => {
@@ -277,6 +334,97 @@ router.post('/:groupId/tasks/submit', upload.single('file'), async (req, res) =>
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
+// POST add attendance
+router.post('/:number/attendance', async (req, res) => {
+  const { number } = req.params;
+  const { title, date, attendance } = req.body;
+
+  try {
+    const group = await Group.findOne({ number });
+    if (!group) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+
+    const newAttendance = {
+      date,
+      title,
+      attendance: attendance.map(student => ({
+        studentId: student.studentId,
+        present: student.present,
+      })),
+    };
+
+    group.attendance.push(newAttendance);
+    await group.save();
+
+    res.status(201).json(newAttendance);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// GET group by group number with overall student attendance percentage and detailed attendance records
+router.get('/:number/attendance', async (req, res) => {
+  const { number } = req.params;
+
+  try {
+    const group = await Group.findOne({ number })
+      .populate('attendance.attendance.studentId', 'name username')
+      .populate('members', 'name username');
+
+    if (!group) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+
+    // Calculate overall attendance percentages
+    const attendanceCount = group.members.reduce((acc, member) => {
+      acc[member._id] = { presentCount: 0, totalCount: 0 };
+      return acc;
+    }, {});
+
+    group.attendance.forEach(record => {
+      record.attendance.forEach(att => {
+        if (attendanceCount[att.studentId._id]) {
+          attendanceCount[att.studentId._id].totalCount += 1;
+          if (att.present) {
+            attendanceCount[att.studentId._id].presentCount += 1;
+          }
+        }
+      });
+    });
+
+    const attendanceWithPercentage = group.members.map(member => {
+      const { presentCount, totalCount } = attendanceCount[member._id] || { presentCount: 0, totalCount: 0 };
+      const percentage = totalCount > 0 ? (presentCount / totalCount) * 100 : 0;
+
+      return {
+        studentId: member._id,
+        name: member.name,
+        username: member.username,
+        attendancePercentage: percentage.toFixed(2),
+      };
+    });
+
+    // Return both overall attendance and detailed records
+    res.json({
+      overallAttendance: attendanceWithPercentage,
+      detailedRecords: group.attendance.map(record => ({
+        _id: record._id,
+        title: record.title,
+        date: record.date,
+        attendance: record.attendance.map(att => ({
+          studentId: att.studentId,
+          name: att.studentId.name,
+          username: att.studentId.username,
+          present: att.present,
+        })),
+      })),
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 
 
 module.exports = router;

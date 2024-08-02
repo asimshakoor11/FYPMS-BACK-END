@@ -2,6 +2,30 @@
 
 const mongoose = require('mongoose');
 
+const AttendanceSchema = new mongoose.Schema({
+  date: {
+    type: Date,
+    required: true,
+  },
+  title: {
+    type: String,
+    required: true,
+  },
+  attendance: [{
+    studentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Student',
+      required: true,
+    },
+    present: {
+      type: Boolean,
+      default: false,
+    },
+  }],
+});
+
+
+
 const TaskSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -39,6 +63,31 @@ const SubmissionSchema = new mongoose.Schema({
   },
 });
 
+
+const MarkSchema = new mongoose.Schema({
+  studentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Student',
+    required: true,
+  },
+  proposalDefense: {
+    type: Number,
+    default: 0,
+  },
+  midEvaluation: {
+    type: Number,
+    default: 0,
+  },
+  internalEvaluation: {
+    type: Number,
+    default: 0,
+  },
+  externalEvaluation: {
+    type: Number,
+    default: 0,
+  },
+});
+
 const GroupSchema = new mongoose.Schema({
   number: {
     type: String,
@@ -69,17 +118,20 @@ const GroupSchema = new mongoose.Schema({
   },
   tasks: [TaskSchema],
   submissions: [SubmissionSchema],
-  marks: [{
-    studentId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Student',
-      required: true,
-    },
-    marks: {
-      type: Number,
-      required: true,
-    },
-  }],
+  // marks: [{
+  //   studentId: {
+  //     type: mongoose.Schema.Types.ObjectId,
+  //     ref: 'Student',
+  //     required: true,
+  //   },
+  //   marks: {
+  //     type: Number,
+  //     required: true,
+  //   },
+  // }],    
+  marks: [MarkSchema],  
+
+  attendance: [AttendanceSchema],
 });
 
 module.exports = mongoose.model('Group', GroupSchema);
