@@ -1,6 +1,3 @@
-
-
-
 const express = require('express');
 const multer = require('multer');
 const axios = require('axios');
@@ -14,8 +11,8 @@ const router = express.Router();
 const dotenv = require('dotenv');
 dotenv.config();
 
-const ASSEMBLYAI_API_KEY = '1f6a8e824e7d48c18868336adb82cc94';
-const GOOGLE_API_KEY = 'AIzaSyANx7eJWN7B_eg_bBCg3gLTFANclJ5G1ts';
+const ASSEMBLYAI_API_KEY = process.env.REACT_APP_ASSEMBLYAI_API_KEY;
+const HUGGING_FACE_API_TOKEN = process.env.REACT_APP_HUGGING_FACE_API_TOKEN;
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -33,8 +30,6 @@ const storage = multer.diskStorage({
   }
 });
 const upload = multer({ storage: storage });
-
-const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
 
 router.post('/upload', upload.single('audio'), async (req, res) => {
   try {
@@ -92,15 +87,44 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
       }
     }
 
-    // Generate summary using Google Generative AI
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const prompt = `Summarize and refine the text with, precise sentences. remove extra things and also make bullets, there is no needs for formalities: ${transcription}`;
-    const result = await model.generateContent(prompt);
+    // Ensure the text is a string
+    // if (typeof transcription !== 'string' || transcription.trim() === '') {
+    //   return res.status(400).json({ error: 'Invalid input. The text must be a non-empty string.' });
+    // }
 
-    // Log the result for debugging
+    // Calculate maximum summary length as 50% of the original text length
+    const maxSummaryLength = Math.floor(transcription.length / 8);
 
-    // Extract the summary text from the response
-    const summary = result.response.text();
+    // Summarize the transcription using Hugging Face API
+    const summaryResponse = await axios.post(
+      // abstractive 
+      // 'https://api-inference.huggingface.co/models/facebook/bart-large-cnn',
+      // {
+      //   inputs: transcription,
+      //   parameters: {
+      //     max_length: maxSummaryLength, // Maximum number of tokens in the summary
+      //     // min_length: 10,  // Minimum number of tokens in the summary
+      //   },
+      // },
+
+      // extractive
+      'https://api-inference.huggingface.co/models/sshleifer/distilbart-cnn-6-6',
+      {
+        inputs: transcription,
+        parameters: {
+          max_length: maxSummaryLength, // Maximum number of tokens in the summary
+          // min_length: 10,  // Minimum number of tokens in the summary
+        },
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${HUGGING_FACE_API_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    const summary = summaryResponse.data[0]?.summary_text;
 
     // Clean up uploaded file from local storage
     fs.unlinkSync(audioFilePath);
