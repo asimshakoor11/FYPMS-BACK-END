@@ -74,8 +74,6 @@ router.post('/schedule-meeting', async (req, res) => {
   }
 });
 
-
-
 // Get meeting details
 router.get('/meeting-details/:id', async (req, res) => {
   const id = req.params.id

@@ -10,8 +10,6 @@ const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-
-
 // Set up multer for file uploads
 // const storage = multer.diskStorage({
 //   destination: (req, file, cb) => {
@@ -68,7 +66,6 @@ router.get('/', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
 
 // GET group by group number
 router.get('/:number', async (req, res) => {
@@ -156,42 +153,6 @@ router.delete('/:groupId/member/:memberId', async (req, res) => {
 });
 
 // PUT update marks for all members of a group
-// router.put('/:number/marks', async (req, res) => {
-//   const { number } = req.params;
-//   const { marks } = req.body; // marks should be an array of { studentId, marks }
-
-//   if (!Array.isArray(marks)) {
-//     return res.status(400).json({ message: 'Marks should be an array' });
-//   }
-
-//   try {
-//     const group = await Group.findOne({ number });
-
-//     if (!group) {
-//       return res.status(404).json({ message: 'Group not found' });
-//     }
-
-//     // Validate each mark entry
-//     marks.forEach(mark => {
-//       if (!mark.studentId || typeof mark.marks !== 'number') {
-//         throw new Error('Invalid marks data');
-//       }
-//     });
-
-//     // Update marks for each student
-//     group.marks = group.marks.filter(mark => !marks.find(updatedMark => new mongoose.Types.ObjectId(updatedMark.studentId).equals(mark.studentId)));
-//     group.marks.push(...marks.map(mark => ({ studentId: new mongoose.Types.ObjectId(mark.studentId), marks: mark.marks })));
-
-//     const updatedGroup = await group.save();
-//     res.json(updatedGroup);
-//   } catch (error) {
-//     res.status(400).json({ message: error.message });
-//     console.log(error.message);
-//   }
-// });
-
-// PUT update marks for all members of a group
-// PUT update marks for all members of a group
 router.put('/:number/marks', async (req, res) => {
   const { number } = req.params;
   const { marks, phase } = req.body; // marks should be an array of { studentId, marks }
@@ -243,8 +204,6 @@ router.put('/:number/marks', async (req, res) => {
     console.log(error.message);
   }
 });
-
-
 
 // Update project phase
 router.put('/:id/phase', async (req, res) => {

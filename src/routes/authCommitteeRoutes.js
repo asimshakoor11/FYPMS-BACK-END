@@ -13,7 +13,7 @@ router.post('/login', authCommitteeController.login);
 
 
 // POST /api/auth/change-password
-router.post('/change-password', verifyToken, authCommitteeController.changePassword);
+router.post('/change-password',  authCommitteeController.changePassword);
 
 
 module.exports = router;
