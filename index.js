@@ -13,6 +13,7 @@ const postRoutes = require('./src/routes/posts');
 const groupRoutes = require('./src/routes/groupRoutes');
 const meetingRoutes = require('./src/routes/meetingRoutes');
 const ZeogoCloudMeeting = require('./src/routes/ZeogoCloudMeeting');
+const pastProjectsRecord = require('./src/routes/pastProjectRecord');
 
 dotenv.config();
 const app = express();
@@ -41,6 +42,8 @@ app.use('/posts', postRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/meetings', meetingRoutes);
 app.use('/api/zeogoCloudMeeting', ZeogoCloudMeeting);
+app.use('/api', pastProjectsRecord);
+
 
 // Ensure the 'uploads' directory exists
 // const uploadsDir = path.join(__dirname, 'uploads');
