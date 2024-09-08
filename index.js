@@ -57,7 +57,6 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-
 // Serve static files
 app.use('/uploads', express.static(uploadsDir));
 

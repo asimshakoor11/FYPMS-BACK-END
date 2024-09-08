@@ -36,7 +36,8 @@ const cloudinaryStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'uploads',
-    format: async (req, file) => 'png', // supports promises as well
+    resource_type: 'auto',
+    // format: async (req, file) => 'png', // supports promises as well
     public_id: (req, file) => `${Date.now()}-${file.originalname}`,
   },
 });
@@ -53,7 +54,18 @@ const localStorage = multer.diskStorage({
 
 // Choose storage based on environment
 const storage = process.env.NODE_ENV === 'production' ? cloudinaryStorage : localStorage;
-const upload = multer({ storage });
+// const upload = multer({ storage });
+const fileFilter = (req, file, cb) => {
+  const allowedMimeTypes = ['image/jpeg', 'image/png', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'];
+
+  if (allowedMimeTypes.includes(file.mimetype)) {
+    cb(null, true); // Accept file
+  } else {
+    cb(new Error('Invalid file type. Only images, PDF, Word, and PowerPoint files are allowed.'), false); // Reject file
+  }
+};
+
+const upload = multer({ storage, fileFilter });
 
 // GET all groups
 router.get('/', async (req, res) => {
@@ -75,7 +87,7 @@ router.get('/:number', async (req, res) => {
     const group = await Group.findOne({ number })
       .populate('members', 'name username')
       .populate('supervisor', 'name username')
-      .populate('marks.studentId', 'name username')      
+      .populate('marks.studentId', 'name username')
       .populate('attendance.attendance.studentId', 'name username');
     if (!group) {
       return res.status(404).json({ message: 'Group not found' });
@@ -156,7 +168,7 @@ router.delete('/:groupId/member/:memberId', async (req, res) => {
 router.put('/:number/marks', async (req, res) => {
   const { number } = req.params;
   const { marks, phase } = req.body; // marks should be an array of { studentId, marks }
-  
+
   if (!Array.isArray(marks)) {
     return res.status(400).json({ message: 'Marks should be an array' });
   }
@@ -293,6 +305,7 @@ router.post('/:groupId/tasks/submit', upload.single('file'), async (req, res) =>
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
+
 // POST add attendance
 router.post('/:number/attendance', async (req, res) => {
   const { number } = req.params;
